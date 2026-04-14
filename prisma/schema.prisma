@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  employees Employee[]
+  payrolls  Payroll[]
+  createdAt DateTime   @default(now())
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  monthlySalary Float
+  overtimeRate  Float          @default(0)
+  payrollEntries PayrollEntry[]
+  createdAt     DateTime       @default(now())
+
+  @@index([userId])
+}
+
+model Payroll {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month     Int
+  year      Int
+  entries   PayrollEntry[]
+  createdAt DateTime       @default(now())
+
+  @@index([userId, month, year])
+}
+
+model PayrollEntry {
+  id            String   @id @default(cuid())
+  payrollId     String
+  payroll       Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  daysWorked    Int
+  leaves        Int
+  overtimeHours Float
+  bonus         Float
+  finalSalary   Float
+  createdAt     DateTime @default(now())
+
+  @@index([payrollId])
+  @@index([employeeId])
+}
